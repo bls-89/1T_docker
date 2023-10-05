@@ -1,0 +1,26 @@
+1) Решение пункта 1 в dockerfile или же вот:
+   	FROM postgres:latest
+	ENV POSTGRES_PASSWORD=password_bs
+	ENV POSTGRES_USER=bs_user
+	ENV POSTGRES_DB=database_bs
+	COPY bs_init_scripts/init.sql /docker-entrypoint-initdb.d/init.sql
+
+
+собираем образ командой: docker build -t sql_test:latest .
+
+запускаем контейнер: docker run -d -p 5432:5432 --name sql_test_container sql_test:latest
+
+2) Команда для подключения к запущенному контейнеру и запуска psql:
+docker exec -it sql_test_container psql -d database_bs -U bs_user
+поясню насчет флага -d без указания его и названия базы у меня не подключается с ошибкой: psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  database "bs_user" does not exist , поэтому гуглеж принес такое решение c добавлением -d и имени базы.
+
+3) Содержание Dockerfile с прикрученным к нему механизмом для хранения данных в контейнере:
+
+	FROM postgres:latest
+	ENV POSTGRES_PASSWORD=password_bs
+	ENV POSTGRES_USER=bs_user
+	ENV POSTGRES_DB=database_bs
+	COPY bs_init_scripts/init.sql /docker-entrypoint-initdb.d/init.sql
+	VOLUME /my_data:/var/lib/postgresql/data
+
+я добавил строку, но не уверен что это правильная запись. хотя проверял и видел этот volume в docker desktop. в лекциях не нашел про создание volume именно в dockerfile, только через docker-compose либо через строку в CMD. 
