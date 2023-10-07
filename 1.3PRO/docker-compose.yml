@@ -25,8 +25,7 @@ services:
       POSTGRES_PASSWORD: password_bs
       POSTGRES_DB: database_bs
     volumes:
-      - /bs_init_scripts/init.sql /docker-entrypoint-initdb.d/init.sql
-      - /my_data:/var/lib/postgresql/data
+      - ./bs_init_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck :
       test: ["CMD","pg_isready", "-U", "bs_user"]
       interval: 5s

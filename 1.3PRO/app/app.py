@@ -1,9 +1,9 @@
 import psycopg2
 
-db_name = 'testdb'
-db_user = 'postgres'
-db_pass = 'postgres'
-db_host = 'db'
+db_name = 'database_bs'
+db_user = 'bs_user'
+db_pass = 'password_bs'
+db_host = 'database_bs'
 db_port = '5432'
 
 def get_column_names(cursor):
