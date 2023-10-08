@@ -1,0 +1,33 @@
+Все строки я закооментил в docker-compose, но для соотвествия заданию привожу описание и команды тут:
+version: latest #версия compose-file
+services: #сервисы для которых будут создаваться контейнеры
+  db: #база данных
+    image: postgres:latest #образ, который будет использован для контейнера с базой данных
+    ports: #порты у контейнера
+      - 5432:5432
+    environment : # окружение - параметры будущей базы данных в контейнере
+      POSTGRES_USER: bs_user #пользлователь
+      POSTGRES_PASSWORD: password_bs #пароль
+      POSTGRES_DB: database_bs #имя базы даных
+    volumes:
+      - ./bs_init_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql #подключение скрипта "джуна" - скрипта который выполнится при создании контейнера
+      - ./my_data:/var/lib/postgresql/data #том для сохранения изменений в базе
+    healthcheck : #проверка что сервис db живой
+      test: ["CMD","pg_isready", "-d", "database_bs", "-U", "bs_user"]
+      interval: 5s
+      retries: 5
+    restart: always
+  app: #само приложение
+    image: python:3.9 #версия образа для контейнера приложения
+    volumes: # тома поключаемые к контейнеру
+      - ./app:/home/app/ #папка на локальном ПК подключенная к контейнеру и содержащая само прилодение и требования requirement
+    working_dir: /home/app #рабочая папка приложения
+    command: bash -c "
+            pip install --upgrade pip
+            && pip install -r requirements.txt
+            && python app.py" # команды при запуске контейнера: обнови pip - установи требуемое из requirements  - запусти приложение app.py
+    depends_on: #условие, что сервис app зависит от сервиса db и запускается app тогда, когда сервис db "живой"
+      db: #изя сервиса от котого зависит
+          condition: service_healthy # требуемое состояние сервиса от которого зависит
+    links:
+        - db #ссылка на сервист от которого зависит

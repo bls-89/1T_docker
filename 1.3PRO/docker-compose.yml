@@ -1,31 +1,32 @@
-version: latest
-services:
-  db:
-    image: postgres:latest
-    ports:
+version: latest #версия compose-file
+services: #сервисы для которых будут созадваться контейнеры
+  db: #база данных
+    image: postgres:latest #образ, который будет использован для контейнера с базой данных
+    ports: #порты у контейнера
       - 5432:5432
-    environment :
-      POSTGRES_USER: bs_user
-      POSTGRES_PASSWORD: password_bs
-      POSTGRES_DB: database_bs
+    environment : # окружение - параметры будущей базы данных в контейнере
+      POSTGRES_USER: bs_user #пользлователь
+      POSTGRES_PASSWORD: password_bs #пароль
+      POSTGRES_DB: database_bs #имя базы даных
     volumes:
-      - ./bs_init_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck :
+      - ./bs_init_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql #подключение скрипта "джуна" - скрипта который выполнится при создании контейнера
+      - ./my_data:/var/lib/postgresql/data #том для сохранения изменений в базе
+    healthcheck : #проверка что сервис db живой
       test: ["CMD","pg_isready", "-d", "database_bs", "-U", "bs_user"]
       interval: 5s
       retries: 5
     restart: always
-  app:
-    image: python:3.9
-    volumes:
-      - ./app:/home/app/
-    working_dir: /home/app
+  app: #само приложение
+    image: python:3.9 #версия образа для контейнера приложения
+    volumes: # тома поключаемые к контейнеру
+      - ./app:/home/app/ #папка на локальном ПК подключенная к контейнеру и содержащая само прилодение и требования requirement
+    working_dir: /home/app #рабочая папка приложения
     command: bash -c "
             pip install --upgrade pip
             && pip install -r requirements.txt
-            && python app.py"
-    depends_on:
-      db:
-          condition: service_healthy
+            && python app.py" # команды при запуске контейнера: обнови pip - установи требуемое из requirements  - запусти приложение app.py
+    depends_on: #условие, что сервис app зависит от сервиса db и запускается app тогда, когда сервис db "живой" - работает и принимает запросы
+      db: #изя сервиса от котого зависит
+          condition: service_healthy # требуемое состояние сервиса от которого зависит
     links:
-        - db
+        - db #ссылка на сервист от которого зависит
