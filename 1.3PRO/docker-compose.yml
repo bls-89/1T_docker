@@ -1,21 +1,5 @@
 version: latest
 services:
-  app:
-    image: python:3.9
-    volumes:
-      - ./app:/home/app/
-    ports:
-      - 5000:80
-    working_dir: /home/app
-    command: bash -c "
-            pip install --upgrade pip
-            && pip install -r requirements.txt
-            && python app.py"
-    depends_on:
-      db:
-          condition: service_healthy
-    links:
-        - db
   db:
     image: postgres:latest
     ports:
@@ -27,7 +11,21 @@ services:
     volumes:
       - ./bs_init_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck :
-      test: ["CMD","pg_isready", "-U", "bs_user"]
+      test: ["CMD","pg_isready", "-d", "database_bs", "-U", "bs_user"]
       interval: 5s
       retries: 5
     restart: always
+  app:
+    image: python:3.9
+    volumes:
+      - ./app:/home/app/
+    working_dir: /home/app
+    command: bash -c "
+            pip install --upgrade pip
+            && pip install -r requirements.txt
+            && python app.py"
+    depends_on:
+      db:
+          condition: service_healthy
+    links:
+        - db
